@@ -5,7 +5,6 @@ Adafruit's RTTTL library supports parsing and playing RTTTL ringtones. Playback 
 This code depends on:
 
 * [Adafruit CircuitPython](https://github.com/adafruit/circuitpython)
-* [Adafruit RTTTL](https://github.com/adafruit/Adafruit_CircuitPython_RTTTL)
 
 Please make sure all dependencies are available on the CircuitPython filesystem.
 

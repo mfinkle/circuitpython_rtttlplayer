@@ -1,7 +1,10 @@
 from micropython import const
 import pwmio
 
-import adafruit_rtttl
+try:
+    from typing import Optional, Union, Tuple, List
+except ImportError:
+    pass
 
 try:
     from time import monotonic_ns
@@ -23,6 +26,71 @@ except (ImportError, NotImplementedError):
 
 NANOS_PER_MS = const(1000000)
 MS_PER_SECOND = const(1000)
+
+# Copy of the notes and note parsing code from Adafruit RTTTL code
+# https://github.com/adafruit/Adafruit_CircuitPython_RTTTL
+PIANO = {
+    "4c": 261.626,
+    "4c#": 277.183,
+    "4d": 293.665,
+    "4d#": 311.127,
+    "4e": 329.628,
+    "4f": 349.228,
+    "4f#": 369.994,
+    "4g": 391.995,
+    "4g#": 415.305,
+    "4a": 440,
+    "4a#": 466.164,
+    "4b": 493.883,
+    "5c": 523.251,
+    "5c#": 554.365,
+    "5d": 587.330,
+    "5d#": 622.254,
+    "5e": 659.255,
+    "5f": 698.456,
+    "5f#": 739.989,
+    "5g": 783.991,
+    "5g#": 830.609,
+    "5a": 880,
+    "5a#": 932.328,
+    "5b": 987.767,
+    "6c": 1046.50,
+    "6c#": 1108.73,
+    "6d": 1174.66,
+    "6d#": 1244.51,
+    "6e": 1318.51,
+    "6f": 1396.91,
+    "6f#": 1479.98,
+    "6g": 1567.98,
+    "6g#": 1661.22,
+    "6a": 1760,
+    "6a#": 1864.66,
+    "6b": 1975.53,
+    "7c": 2093,
+    "7c#": 2217.46,
+}
+
+def _parse_note(note: str, duration: int = 2, octave: int = 6) -> Tuple[str, float]:
+    note = note.strip()
+    piano_note = None
+    note_duration = duration
+    if note[0].isdigit() and note[1].isdigit():
+        note_duration = int(note[:2])
+        piano_note = note[2]
+    elif note[0].isdigit():
+        note_duration = int(note[0])
+        piano_note = note[1]
+    else:
+        piano_note = note[0]
+    if "." in note:
+        note_duration *= 1.5
+    if "#" in note:
+        piano_note += "#"
+    note_octave = str(octave)
+    if note[-1].isdigit():
+        note_octave = note[-1]
+    piano_note = note_octave + piano_note
+    return piano_note, note_duration
 
 
 class RTTTLSong:
@@ -52,9 +120,9 @@ class RTTTLSong:
         self._notes_index = 0
         notes = self.tune.split(',')
         for note in notes:
-            piano_note, note_duration = adafruit_rtttl._parse_note(note, self.duration, self.octave)
-            if piano_note in adafruit_rtttl.PIANO:
-                note_frequency = int(adafruit_rtttl.PIANO[piano_note])
+            piano_note, note_duration = _parse_note(note, self.duration, self.octave)
+            if piano_note in PIANO:
+                note_frequency = int(PIANO[piano_note])
             else:
                 note_frequency = None
             self._notes.append((note_frequency, note_duration))
